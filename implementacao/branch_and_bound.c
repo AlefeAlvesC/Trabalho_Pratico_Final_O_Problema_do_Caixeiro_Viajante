@@ -2,19 +2,6 @@
 #include <stdlib.h>
 #include "branch_and_bound.h"
 
-// Imprime matriz com "INF" para INF_COST
-void imprimirMatriz(int tam, int** m) {
-    printf("Matriz (nível):\n");
-    for (int i = 0; i < tam; i++) {
-        for (int j = 0; j < tam; j++) {
-            if (m[i][j] == INF_COST) printf("INF ");
-            else printf("%3d ", m[i][j]);
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-
 int** alocarCopiaMatriz(int tam, int** origem) {
     int** copia = malloc(tam * sizeof(int*));
     if (!copia) { perror("malloc"); exit(EXIT_FAILURE); }
@@ -52,21 +39,16 @@ int reduzirMatriz(int tam, int** m) {
             for (int i = 0; i < tam; i++) if (m[i][j] != INF_COST) m[i][j] -= menor;
         }
     }
-    printf("Custo de redução: %d\n", custo);
-    imprimirMatriz(tam, m);
     return custo;
 }
 
 int caminhoAB(int A, int B, int tam, int** m) {
-    printf("Expandindo caminho %d -> %d\n", A, B);
     for (int i = 0; i < tam; i++) {
         m[A][i] = INF_COST;
         m[i][B] = INF_COST;
     }
     m[B][A] = INF_COST;
-    imprimirMatriz(tam, m);
     int extra = reduzirMatriz(tam, m);
-    printf("Custo extra caminho %d->%d: %d\n\n", A, B, extra);
     return extra;
 }
 
@@ -86,8 +68,6 @@ No* criarNo(int valorNo, int custo, int nivel, int* caminho, int tam, int** matr
     no->matriz = alocarCopiaMatriz(tam, matrizBase);
     no->numFilhos = 0;
     no->filhos = NULL;
-    printf("Criado nó %d com custo %d no nível %d\n", valorNo, custo, nivel);
-    imprimirMatriz(tam, no->matriz);
     return no;
 }
 
@@ -106,7 +86,6 @@ void branchBound(No* no, int tam, int* melhorCusto, int* melhorCaminho) {
         int ultimo = no->valorNo;
         int retorno = (no->matriz[ultimo][0] == INF_COST) ? INF_COST : no->matriz[ultimo][0];
         int total = (retorno == INF_COST) ? INF_COST : no->custo + retorno;
-        printf("Fechando ciclo: custo total %d\n", total);
         if (total < *melhorCusto) {
             *melhorCusto = total;
             for (int i = 0; i <= no->nivel; i++) melhorCaminho[i] = no->caminho[i];
@@ -119,7 +98,6 @@ void branchBound(No* no, int tam, int* melhorCusto, int* melhorCaminho) {
             int** copia = alocarCopiaMatriz(tam, no->matriz);
             int extra = caminhoAB(no->valorNo, j, tam, copia);
             int novoCusto = no->custo + extra;
-            printf("Custo parcial até nó %d: %d\n", j, novoCusto);
             if (novoCusto < *melhorCusto) {
                 int* novoCam = malloc((no->nivel+2) * sizeof(int));
                 for (int k = 0; k <= no->nivel; k++) novoCam[k] = no->caminho[k];
@@ -129,8 +107,6 @@ void branchBound(No* no, int tam, int* melhorCusto, int* melhorCaminho) {
                 no->filhos[no->numFilhos++] = filho;
                 free(novoCam);
                 branchBound(filho, tam, melhorCusto, melhorCaminho);
-            } else {
-                printf("Poda: custo %d >= melhorCusto %d\n\n", novoCusto, *melhorCusto);
             }
             for (int x = 0; x < tam; x++) free(copia[x]);
             free(copia);
@@ -138,35 +114,13 @@ void branchBound(No* no, int tam, int* melhorCusto, int* melhorCaminho) {
     }
 }
 
-void imprimirResultado(int* caminho, int tam) {
+void imprimirResultado(int* caminho, char** cidades, int tam) {
     printf("Melhor rota: ");
-    for (int i = 0; i <= tam; i++) printf("%d ", caminho[i]);
+    for (int i = 0; i <= tam; i++){
+        printf("%s ", cidades[caminho[i]]);
+        if(i != tam){
+            printf("-> ");
+        }
+    } 
     printf("\n");
-}
-
-int main(void) {
-    int tam = 4;
-    int exemplo[4][4] = {
-        {INF_COST, 10, 15, 20},
-        {10, INF_COST, 35, 25},
-        {15, 35, INF_COST, 30},
-        {20, 25, 30, INF_COST}
-    };
-    int** base = malloc(tam * sizeof(int*));
-    for (int i = 0; i < tam; i++) {
-        base[i] = malloc(tam * sizeof(int));
-        for (int j = 0; j < tam; j++) base[i][j] = exemplo[i][j];
-    }
-    int custo0 = reduzirMatriz(tam, base);
-    int caminho0[1] = {0};
-    No* raiz = criarNo(0, custo0, 0, caminho0, tam, base);
-    int melhorCusto = INF_COST;
-    int melhorCaminho[ tam + 1];
-    branchBound(raiz, tam, &melhorCusto, melhorCaminho);
-    printf("\nCusto mínimo: %d\n", melhorCusto);
-    imprimirResultado(melhorCaminho, tam);
-    liberarArvore(raiz, tam);
-    for (int i = 0; i < tam; i++) free(base[i]);
-    free(base);
-    return EXIT_SUCCESS;
 }

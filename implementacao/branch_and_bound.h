@@ -20,12 +20,19 @@ typedef struct no {
 
 // Protótipos de funções
 int** alocarCopiaMatriz(int tam, int** origem);
+
 int reduzirMatriz(int tam, int** m);
+
 int caminhoAB(int A, int B, int tam, int** m);
+
 No* criarNo(int valorNo, int custo, int nivel, int* caminho, int tam, int** matrizBase);
+
 void liberarArvore(No* no, int tam);
+
 void branchBound(No* no, int tam, int* melhorCusto, int* melhorCaminho);
+
 int jaVisitado(int cidade, int* caminho, int nivel);
-void imprimirResultado(int* caminho, int tam);
+
+void imprimirResultado(int* caminho, char** cidades, int tam);
 
 #endif // BRANCH_AND_BOUND_H
