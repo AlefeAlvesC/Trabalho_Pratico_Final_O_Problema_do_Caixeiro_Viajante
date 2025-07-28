@@ -19,24 +19,42 @@ int reduzirMatriz(int tam, int** m) {
     for (int i = 0; i < tam; i++) {
         int menor = INF_COST, zero = 0;
         for (int j = 0; j < tam; j++) {
-            if (m[i][j] == 0) { zero = 1; break; }
-            if (m[i][j] < menor) menor = m[i][j];
+            if (m[i][j] == 0) { 
+                zero = 1; 
+                break; 
+            }
+            if (m[i][j] < menor && m[i][j] != INF_COST) {
+                menor = m[i][j];
+            }
         }
         if (!zero && menor != INF_COST) {
             custo += menor;
-            for (int j = 0; j < tam; j++) if (m[i][j] != INF_COST) m[i][j] -= menor;
+            for (int j = 0; j < tam; j++) {
+                if (m[i][j] != INF_COST) {
+                    m[i][j] -= menor;
+                }
+            }
         }
     }
     // Colunas
     for (int j = 0; j < tam; j++) {
         int menor = INF_COST, zero = 0;
         for (int i = 0; i < tam; i++) {
-            if (m[i][j] == 0) { zero = 1; break; }
-            if (m[i][j] < menor) menor = m[i][j];
+            if (m[i][j] == 0) { 
+                zero = 1; 
+                break; 
+            }
+            if (m[i][j] < menor && m[i][j] != INF_COST) {
+                menor = m[i][j];
+            }
         }
         if (!zero && menor != INF_COST) {
             custo += menor;
-            for (int i = 0; i < tam; i++) if (m[i][j] != INF_COST) m[i][j] -= menor;
+            for (int i = 0; i < tam; i++) {
+                if (m[i][j] != INF_COST) {
+                     m[i][j] -= menor;
+                }
+            }
         }
     }
     return custo;
@@ -84,8 +102,14 @@ void liberarArvore(No* no, int tam) {
 void branchBound(No* no, int tam, int* melhorCusto, int* melhorCaminho) {
     if (no->nivel == tam - 1) {
         int ultimo = no->valorNo;
-        int retorno = (no->matriz[ultimo][0] == INF_COST) ? INF_COST : no->matriz[ultimo][0];
-        int total = (retorno == INF_COST) ? INF_COST : no->custo + retorno;
+        int custoRetorno = no->matriz[ultimo][0]; //cidade inicial retorno
+
+        if (custoRetorno == INF_COST) { //caso o retorno seja infinito, logo nao e um ciclo valido
+            return;
+        }
+        
+        int total = no->custo + custoRetorno; //cuto total do ciclo completo, soma o custo acumulado desde o ultimo no ate o custo de retorno a cidade
+        
         if (total < *melhorCusto) {
             *melhorCusto = total;
             for (int i = 0; i <= no->nivel; i++) melhorCaminho[i] = no->caminho[i];
@@ -95,9 +119,18 @@ void branchBound(No* no, int tam, int* melhorCusto, int* melhorCaminho) {
     }
     for (int j = 0; j < tam; j++) {
         if (!jaVisitado(j, no->caminho, no->nivel)) {
+
+            if (no->matriz[no->valorNo][j] == INF_COST) { //pula ramificacao caso a dita aresta seja infinita
+                continue;
+            }
+
             int** copia = alocarCopiaMatriz(tam, no->matriz);
+
+            int custoAresta = no->matriz[no->valorNo][j]; //vai obter o custo real da aresta atual (no->valorNo) para a proxima cidade (j)
+
             int extra = caminhoAB(no->valorNo, j, tam, copia);
-            int novoCusto = no->custo + extra;
+
+            int novoCusto = no->custo + custoAresta + extra; //soma acumulada do pai, o custo real da percorrida aresta junto com o custo de reducao adicional da matriz
             if (novoCusto < *melhorCusto) {
                 int* novoCam = malloc((no->nivel+2) * sizeof(int));
                 for (int k = 0; k <= no->nivel; k++) novoCam[k] = no->caminho[k];
