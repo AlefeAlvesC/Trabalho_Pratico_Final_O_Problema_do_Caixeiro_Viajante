@@ -20,13 +20,10 @@ O algoritmo **Branch and Bound** trabalha com poda de estados não promissores p
 ```
 Trabalho_Pratico_Final_O_Problema_do_Caixeiro_Viajante-main/
 │
-├── implementacao/
+├── codigos/
 │   ├── main.c                 # Interação com o usuário e montagem da matriz de distâncias
 │   ├── branch_and_bound.c     # Implementação do algoritmo Branch and Bound
 │   ├── branch_and_bound.h     # Interface do algoritmo
-│
-├── codigos/                   # Versão alternativa do código
-│   ├── ...
 │
 └── README.md                  # Documentação do projeto
 ```
@@ -95,10 +92,12 @@ Custo total: 45
 
 Este projeto foi desenvolvido como trabalho prático final para a disciplina de Estrutura de Dados II.
 Discentes:
+
 - [Andersson Silva Pereira](https://github.com/Moab76)
 - [Álefe Alves](https://github.com/AlefeAlvesC)
 - [José Carvalho](https://github.com/JcVison)
 - [Matheus Rebouças](https://github.com/Math77077)
+
 ---
 
 ## 📃 Licença
