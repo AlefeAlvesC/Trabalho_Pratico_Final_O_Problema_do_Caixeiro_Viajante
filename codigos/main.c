@@ -44,20 +44,18 @@ void popular_matriz_princial(int **matriz, int tam) {
     }
 }
 
-int liberar_matriz(int** matriz, int tam) {
+void liberar_matriz(int** matriz, int tam) {
     for(int i = 0; i < tam; i++) {
         free(matriz[i]);
     }
     free(matriz);
-    return 0;
 }
 
-int liberar_nome_cidades(int tam) {
+void liberar_nome_cidades(int tam) {
     for(int i = 0; i < tam; i++) {
         free(nome_cidades[i]);
     }
     free(nome_cidades);
-    return 0;
 }
 
 void limpar_buffer() {
@@ -121,21 +119,49 @@ void menuPrincipal() {
                     printf("Limite maximo de cidades atingido!\n");
                     break;
                 }
-                tam++;
-                nome_cidades = realloc(nome_cidades, tam * sizeof(char*));
-                nome_cidades[tam-1] = malloc(40 * sizeof(char));
-                lerNomeCidade(nome_cidades[tam-1], "Informe o nome da nova cidade: ");
-                
-                // Redimensionar matriz
-                matriz = realloc(matriz, tam * sizeof(int*));
-                for (int i = 0; i < tam-1; i++) {
-                    matriz[i] = realloc(matriz[i], tam * sizeof(int));
-                    matriz[i][tam-1] = INT_MAX;
+
+                int novoTam = tam + 1;
+
+                int** tempMatriz = realloc(matriz, novoTam * sizeof(int*)); //realocacao do array de ponteiros de linha
+                if(!tempMatriz) {
+                    perror("Realloc para linhas da matriz");
+                    exit(EXIT_FAILURE);
                 }
-                matriz[tam-1] = malloc(tam * sizeof(int));
-                for (int j = 0; j < tam; j++) {
-                    matriz[tam-1][j] = (j == tam-1) ? 0 : INT_MAX;
+                matriz = tempMatriz;
+
+                for (int i = 0; i < tam; i++) { //realocacao e inicializacao das linhas existentes com a nova coluna
+                    int* tempLinha = realloc(matriz[i], novoTam * sizeof(int));
+                    if(!tempLinha) {
+                        perror("Realloc para colunas da matriz");
+                        exit(EXIT_FAILURE);
+                    }
+                    matriz[i] = tempLinha;
+                    matriz[i][novoTam - 1] = INT_MAX;
                 }
+
+                matriz[novoTam - 1] = malloc(novoTam * sizeof(int)); //aloca e inicializa a nova linha
+                if(!matriz[novoTam - 1]){
+                    perror("Realloc para nova linha da matriz");
+                    exit(EXIT_FAILURE);
+                }
+                for (int j = 0; j < novoTam; j++) {
+                    matriz[novoTam - 1][j] = (j == novoTam - 1) ? 0 : INT_MAX;
+                }
+
+                char **tempNomeCidades = realloc(nome_cidades, novoTam * sizeof(char*)); //atualizacao dos nome das cidades
+                if (!tempNomeCidades) {
+                    perror("realloc para nomes das cidades");
+                    exit(EXIT_FAILURE);
+                }
+                nome_cidades = tempNomeCidades;
+                nome_cidades[novoTam - 1] = malloc(40 * sizeof(char));
+                if (!nome_cidades[novoTam - 1]) {
+                    perror("malloc para novo nome de cidade");
+                    exit(EXIT_FAILURE);
+                }
+
+                lerNomeCidade(nome_cidades[novoTam-1], "Informe o nome da nova cidade: ");
+                tam = novoTam;
                 break;
             }
                 
@@ -195,8 +221,13 @@ void menuPrincipal() {
                 int melhorCaminho[tam + 1];
                 
                 branchBound(raiz, tam, &melhorCusto, melhorCaminho);
-                printf("\nCusto minimo: %d\n", melhorCusto);
-                imprimirResultado(melhorCaminho, nome_cidades, tam);
+                if (melhorCusto == INT_MAX) {
+                    printf("\nNao foi possivel encontrar um ciclo completo com custo finito.\n");
+                    printf("Verifique se todas as cidades estao conectadas e possuem custo validos.\n");
+                } else {
+                    printf("\nCusto minimo: %d\n", melhorCusto);
+                    imprimirResultado(melhorCaminho, nome_cidades, tam);
+                }
                 
                 liberarArvore(raiz, tam);
                 for (int i = 0; i < tam; i++) free(base[i]);
@@ -231,7 +262,7 @@ int main() {
     }
     
     // Popular matriz inicial
-    popular_matriz_princial(matriz, tam);
+    //popular_matriz_princial(matriz, tam);
     
     // Menu integrado
     menuPrincipal();
