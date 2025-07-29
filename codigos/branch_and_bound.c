@@ -151,7 +151,7 @@ int jaVisitado(int cidade, int* caminho, int nivel) {
  */
 No* criarNo(int valorNo, int custo, int nivel, int* caminho, int tam, int** matrizBase) {
     No* no = malloc(sizeof(No));
-    if (!no) { perror("malloc"); exit(EXIT_FAILURE); }
+    if (!no) { perror("malloc para no"); exit(EXIT_FAILURE); }
     
     no->valorNo = valorNo;
     no->custo = custo;
@@ -159,6 +159,7 @@ No* criarNo(int valorNo, int custo, int nivel, int* caminho, int tam, int** matr
     
     // Aloca e copia o caminho
     no->caminho = malloc((nivel+1) * sizeof(int));
+    if (!no->caminho) { perror("malloc para no->caminho"); exit(EXIT_FAILURE); }
     for (int i = 0; i <= nivel; i++) 
         no->caminho[i] = caminho[i];
     
@@ -224,9 +225,19 @@ void branchBound(No* no, int tam, int* melhorCusto, Solucoes* solucoes) {
         
         // Adiciona à lista se for uma solução ótima
         if (total == *melhorCusto) {
-            solucoes->caminhos = realloc(solucoes->caminhos, 
-                                       (solucoes->numCaminhos + 1) * sizeof(int*));
+            // verifica o realloc
+            int** temp_caminhos = realloc(solucoes->caminhos, (solucoes->numCaminhos + 1) * sizeof(int*));
+            if (!temp_caminhos) {
+                perror("realloc para solucoes->caminhos");
+                exit(EXIT_FAILURE);
+            }
+            solucoes->caminhos = temp_caminhos; //se deu certo
+
             solucoes->caminhos[solucoes->numCaminhos] = malloc((tam + 1) * sizeof(int));
+            if (!solucoes->caminhos[solucoes->numCaminhos]) {
+                perror("malloc para solucoes->caminhos[numCaminhos]");
+                exit(EXIT_FAILURE);
+            }
             
             // Copia o caminho
             for (int i = 0; i <= no->nivel; i++) {
@@ -249,27 +260,31 @@ void branchBound(No* no, int tam, int* melhorCusto, Solucoes* solucoes) {
             int custoAresta = no->matriz[no->valorNo][j];
             int extra = caminhoAB(no->valorNo, j, tam, copia);
             int novoCusto = no->custo + custoAresta + extra;
+
+            // Cria novo caminho
+            int* novoCam = malloc((no->nivel + 2) * sizeof(int));
+            if (!novoCam) { perror("malloc"); exit(EXIT_FAILURE); }
+
+            for (int k = 0; k <= no->nivel; k++) 
+                novoCam[k] = no->caminho[k];
+            novoCam[no->nivel + 1] = j;
             
             // Se for promissor (custo <= melhor conhecido)
             if (novoCusto <= *melhorCusto) {
-                // Cria novo caminho
-                int* novoCam = malloc((no->nivel + 2) * sizeof(int));
-                for (int k = 0; k <= no->nivel; k++) 
-                    novoCam[k] = no->caminho[k];
-                novoCam[no->nivel + 1] = j;
                 
                 // Cria novo nó filho
                 No* filho = criarNo(j, novoCusto, no->nivel + 1, novoCam, tam, copia);
                 
                 // Adiciona à lista de filhos
                 no->filhos = realloc(no->filhos, (no->numFilhos + 1) * sizeof(No*));
+                if (!no->filhos) { perror("realloc"); exit(EXIT_FAILURE); }
                 no->filhos[no->numFilhos++] = filho;
-                
-                free(novoCam);
                 
                 // Chamada recursiva
                 branchBound(filho, tam, melhorCusto, solucoes);
             }
+
+            free(novoCam);
             
             // Libera a cópia da matriz
             for (int x = 0; x < tam; x++) 
