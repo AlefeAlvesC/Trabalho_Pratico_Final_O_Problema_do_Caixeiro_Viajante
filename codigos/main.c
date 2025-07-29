@@ -5,12 +5,13 @@
 #include <limits.h>
 #include "branch_and_bound.h"
 
-// Variáveis globais do código original
+//Variáveis globais referentes aos nomes das cidades, a matriz de adjacência e o tamanho da matriz
 char **nome_cidades;
 int **matriz;
 int tam;
 
-// Funções do código original (mantidas intactas)
+//Função para criar uma matriz de adjacência inicializada com INT_MAX
+//Ela recebe o tamanho da matriz e retorna um ponteiro para a matriz alocada
 int** criar_matriz(int tam) {
     int** matriz;
     matriz = (int**) malloc(tam * sizeof(int*));
@@ -24,6 +25,8 @@ int** criar_matriz(int tam) {
     return matriz;
 }
 
+//Função para alocar memória para os nomes das cidades
+//Ela recebe o tamanho da matriz e aloca memória para cada nome de cidade
 void alocar_nome_cidades(int tam) {
     nome_cidades = (char**) malloc(tam * sizeof(char*));
     for(int i = 0; i < tam; i++) {
@@ -31,7 +34,9 @@ void alocar_nome_cidades(int tam) {
     }
 }
 
-void popular_matriz_princial(int **matriz, int tam) {
+//Função para popular a matriz de adjacência com os custos entre as cidades
+//Ela recebe a matriz e o tamanho da matriz, e solicita ao usuário os custos entre as cidades
+void popular_matriz_adjacencia(int **matriz, int tam) {
     for(int i = 0; i < tam; i++) {
         for(int j = 0; j < tam; j++) {
             if(i == j) continue;
@@ -44,6 +49,8 @@ void popular_matriz_princial(int **matriz, int tam) {
     }
 }
 
+//Função para liberar a memória alocada para a matriz de adjacência
+//Ela recebe a matriz e o tamanho da matriz
 void liberar_matriz(int** matriz, int tam) {
     for(int i = 0; i < tam; i++) {
         free(matriz[i]);
@@ -51,6 +58,8 @@ void liberar_matriz(int** matriz, int tam) {
     free(matriz);
 }
 
+//Função para liberar a memória alocada para os nomes das cidades
+//Ela recebe o tamanho da matriz e libera cada nome de cidade
 void liberar_nome_cidades(int tam) {
     for(int i = 0; i < tam; i++) {
         free(nome_cidades[i]);
@@ -58,12 +67,16 @@ void liberar_nome_cidades(int tam) {
     free(nome_cidades);
 }
 
+//Função para limpar o buffer de entrada
+//Ela lê até encontrar um '\n' ou EOF, descartando os caracteres
 void limpar_buffer() {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
 }
 
-// Funções do segundo código (com tratamento de erros)
+//Função para tratamento de entrada de inteiros
+//Ela recebe um prompt, um valor mínimo e máximo, e retorna um inteiro válido dentro desse intervalo
+//Se a entrada for inválida, solicita novamente até receber um valor válido
 int lerInteiro(const char *prompt, int min, int max) {
     char input[50];
     int valor;
@@ -83,6 +96,9 @@ int lerInteiro(const char *prompt, int min, int max) {
     }
 }
 
+//Função para tratamento de entrada de nomes de cidades
+//Ela recebe um ponteiro para o nome da cidade e um prompt, e solicita ao usuário o nome
+//Se o nome for vazio, solicita novamente até receber um nome válido
 void lerNomeCidade(char *nome, const char *prompt) {
     while (1) {
         printf("%s", prompt);
@@ -96,7 +112,8 @@ void lerNomeCidade(char *nome, const char *prompt) {
     }
 }
 
-// Menu integrado
+//Função para exibir o menu principal do sistema
+//Ela apresenta as opções disponíveis e executa a ação correspondente à opção escolhida pelo usuário
 void menuPrincipal() {
     int opcao;
     
@@ -114,6 +131,8 @@ void menuPrincipal() {
         limpar_buffer();
         
         switch(opcao) {
+            //Opcao 1: Adicionar cidade
+            //Permite ao usuário adicionar uma nova cidade à matriz de adjacência
             case 1: {
                 if (tam >= 20) { // Limite máximo do branch_and_bound.h
                     printf("Limite maximo de cidades atingido!\n");
@@ -164,13 +183,15 @@ void menuPrincipal() {
                 tam = novoTam;
                 break;
             }
-                
+            
+            //Opcao 2: Definir distâncias entre cidades
+            //Permite ao usuário definir as distâncias entre as cidades já cadastradas
             case 2: {
                 if (tam < 2) {
                     printf("E necessario ter pelo menos 2 cidades!\n");
                     break;
                 }
-                popular_matriz_princial(matriz, tam);
+                popular_matriz_adjacencia(matriz, tam);
                 break;
             }
                 
@@ -193,7 +214,9 @@ void menuPrincipal() {
                 }
                 break;
             }
-                
+            
+            //Opcao 4: Listar todas as cidades
+            //Exibe uma lista de todas as cidades cadastradas no sistema
             case 4: {
                 printf("\n=== LISTA DE CIDADES ===\n");
                 for (int i = 0; i < tam; i++) {
@@ -201,7 +224,9 @@ void menuPrincipal() {
                 }
                 break;
             }
-                
+            
+            //Opcao 5: Calcular rota otimizada (Branch and Bound)
+            //Executa o algoritmo Branch and Bound para encontrar a rota mais curta entre todas as cidades
             case 5: {
                 if (tam < 2) {
                     printf("E necessario ter pelo menos 2 cidades!\n");
@@ -234,7 +259,9 @@ void menuPrincipal() {
                 free(base);
                 break;
             }
-                
+            
+            //Opcao 6: Sair
+            //Encerra o programa
             case 6:
                 printf("Encerrando o programa...\n");
                 break;
@@ -248,21 +275,22 @@ void menuPrincipal() {
 int main() {
     printf("SISTEMA DE GERENCIAMENTO DE ROTAS - CAIXEIRO VIAJANTE\n\n");
     
-    // Inicialização com o código original
+    //Recebe o tamanho inicial da matriz de adjacência
+    //O usuário deve informar a quantidade de cidades que deseja cadastrar inicialmente
     printf("Informe a quantidade inicial de cidades: \n");
     tam = lerInteiro("", 1, 20);
     
+    // Alocar memória para a matriz de adjacência e os nomes das cidades
     matriz = criar_matriz(tam);
     alocar_nome_cidades(tam);
     
+    // Ler os nomes das cidades
     for(int i = 0; i < tam; i++) {
         char prompt[50];
         sprintf(prompt, "Informe o nome da cidade %d: ", i+1);
         lerNomeCidade(nome_cidades[i], prompt);
     }
     
-    // Popular matriz inicial
-    //popular_matriz_princial(matriz, tam);
     
     // Menu integrado
     menuPrincipal();
