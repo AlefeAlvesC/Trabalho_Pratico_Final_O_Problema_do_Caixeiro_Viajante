@@ -17,6 +17,12 @@ typedef struct no {
     struct no** filhos;// Vetor de ponteiros para filhos
 } No;
 
+typedef struct {
+    int custo;
+    int** caminhos;   // Matriz de caminhos (cada linha é um caminho)
+    int numCaminhos;  // Quantidade de caminhos encontrados
+} Solucoes;
+
 // Protótipos de funções
 
 //Função que realiza uma copia do conteúdo da matriz passada por parâmentro
@@ -41,7 +47,7 @@ void liberarArvore(No* no, int tam);
 
 //Função principal responsável por implementar o algoritmo Branch and Bound
 //Ela recebe o nó atual, o tamanho da matriz, o melhor custo encontrado até agora e o melhor caminho encontrado
-void branchBound(No* no, int tam, int* melhorCusto, int* melhorCaminho);
+void branchBound(No* no, int tam, int* melhorCusto, Solucoes* solucoes);
 
 //Função para verificar se uma cidade já foi visitada no caminho atual
 //Ela recebe a cidade, o caminho atual e o nível atual do nó
@@ -49,6 +55,6 @@ int jaVisitado(int cidade, int* caminho, int nivel);
 
 //Função para imprimir o resultado final do melhor caminho encontrado
 //Ela recebe o caminho, as cidades e o tamanho do caminho
-void imprimirResultado(int* caminho, char** cidades, int tam);
+void imprimirResultado(Solucoes* solucoes, char** cidades, int tam);
 
 #endif // BRANCH_AND_BOUND_H

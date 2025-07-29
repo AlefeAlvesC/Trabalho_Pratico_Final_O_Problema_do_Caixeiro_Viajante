@@ -229,32 +229,37 @@ void menuPrincipal() {
             //Executa o algoritmo Branch and Bound para encontrar a rota mais curta entre todas as cidades
             case 5: {
                 if (tam < 2) {
-                    printf("E necessario ter pelo menos 2 cidades!\n");
+                    printf("É necessário ter pelo menos 2 cidades!\n");
                     break;
                 }
-                
+
                 int** base = malloc(tam * sizeof(int*));
                 for (int i = 0; i < tam; i++) {
                     base[i] = malloc(tam * sizeof(int));
                     for (int j = 0; j < tam; j++) base[i][j] = matriz[i][j];
                 }
-                
+
                 int custo0 = reduzirMatriz(tam, base);
                 int caminho0[1] = {0};
                 No* raiz = criarNo(0, custo0, 0, caminho0, tam, base);
-                int melhorCusto = INT_MAX;
-                int melhorCaminho[tam + 1];
-                
-                branchBound(raiz, tam, &melhorCusto, melhorCaminho);
-                if (melhorCusto == INT_MAX) {
-                    printf("\nNao foi possivel encontrar um ciclo completo com custo finito.\n");
-                    printf("Verifique se todas as cidades estao conectadas e possuem custo validos.\n");
+
+                Solucoes solucoes;
+                solucoes.custo = INT_MAX;
+                solucoes.caminhos = NULL;
+                solucoes.numCaminhos = 0;
+
+                branchBound(raiz, tam, &solucoes.custo, &solucoes);
+
+                if (solucoes.numCaminhos == 0) {
+                    printf("\nNão foi possível encontrar um ciclo válido.\n");
                 } else {
-                    printf("\nCusto minimo: %d\n", melhorCusto);
-                    imprimirResultado(melhorCaminho, nome_cidades, tam);
+                    imprimirResultado(&solucoes, nome_cidades, tam);
                 }
-                
+
+                // Liberar memória
                 liberarArvore(raiz, tam);
+                for (int i = 0; i < solucoes.numCaminhos; i++) free(solucoes.caminhos[i]);
+                free(solucoes.caminhos);
                 for (int i = 0; i < tam; i++) free(base[i]);
                 free(base);
                 break;
